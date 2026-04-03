@@ -6,13 +6,17 @@ import { Colors } from '../styles/colors';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { Direction, GestureEventType,Coordinate } from '../types/types';
 import Snake from './Snake';
+import { checkGameOver } from '../utils/checkGameOver';
+import Food from './Food';
+import { checkEatsFood } from '../utils/checkEatFood';
+import { randomFoodPosition } from '../utils/randomFoodPosition';
 
 
 
 
 const SNAKE_INTIAL_POSITION=[{x:5,y:5}];
 const FOOD_INITIAL_POSITION={x:5,y:20};
-const GAME_BOUNDS = { Xmin:0, Xmax:35,yMin:0,yMax:63}
+const GAME_BOUNDS = { xMin: 0, xMax: 37,yMin: 0,yMax: 85}
 const MOVE_INTERNAL=50;
 const   SCORE_INCREMENT =10;
 
@@ -25,6 +29,7 @@ export default function Game():React.JSX.Element{
     )
     const [isGameOver,setIsGameOver]= React.useState<boolean>(false);
     const [isPaused,setIsPaused]= React.useState<boolean>(false);
+    const [score, setScore]= React.useState<number>(0);
     React.useEffect(()=>{
         // move the snake if the game is not over 
             if(!isGameOver){
@@ -43,8 +48,12 @@ export default function Game():React.JSX.Element{
         const newHead={...snakeHead}// create a copy ( we will replace the state by passing the newHead)
 
         //game over 
+        if (checkGameOver(snakeHead,GAME_BOUNDS)){
 
-
+            setIsGameOver((prev)=>!prev);
+            return;
+        }
+        
         //switch case to determine which way the snake will go.
         switch(direction){
             case Direction.Up:
@@ -63,6 +72,15 @@ export default function Game():React.JSX.Element{
                     break;
 
         }
+        //if its food grow the snake 
+            if (checkEatsFood(newHead,food,2)){
+                setSnake([newHead,...snake])
+                //get another position for the food and set the score
+                setScore(score+SCORE_INCREMENT);
+                setFood(randomFoodPosition(GAME_BOUNDS.xMax,GAME_BOUNDS.yMax))
+            }
+
+
         //we need to remove the last position of the head so that snake does not continually grow without eating so we will use the slice function
         //slice is used like this slice(start,end) start=where to begin end=where to stop, but not include
             setSnake([newHead,...snake.slice(0,-1)])
@@ -93,7 +111,9 @@ const pan = Gesture.Pan().onEnd((event) => {
     return(
        <GestureDetector gesture={pan}>
         <SafeAreaView style={styles.container} >
-            <View style={styles.boundaries}> <Snake snake={snake}/></View>
+            <View style={styles.boundaries}> <Snake snake={snake}/>
+            <Food x={food.x} y={food.y}/>
+            </View>
         </SafeAreaView>
         </GestureDetector>
     )
@@ -108,11 +128,9 @@ const styles= StyleSheet.create({
     boundaries:{
         flex:1,
         borderColor: Colors.primary,
-        borderWidth:35,
-        borderBottomLeftRadius:50,
-        borderBottomRightRadius:50,
-        borderTopRightRadius:50,
-        borderTopLeftRadius:50,
+        borderWidth:10,
+        borderBottomLeftRadius:30,
+        borderBottomRightRadius:30,
         backgroundColor:Colors.background,
     }
 

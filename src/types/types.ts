@@ -3,7 +3,7 @@ export interface GestureEventType {
     translationY:number;
 }
 export interface Coordinate{
-    x: number;
+    x:number;
     y:number;
 }
 export enum Direction{
