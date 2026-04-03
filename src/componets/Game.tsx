@@ -10,6 +10,7 @@ import { checkGameOver } from '../utils/checkGameOver';
 import Food from './Food';
 import { checkEatsFood } from '../utils/checkEatFood';
 import { randomFoodPosition } from '../utils/randomFoodPosition';
+import Header from './Header';
 
 
 
@@ -74,16 +75,21 @@ export default function Game():React.JSX.Element{
         }
         //if its food grow the snake 
             if (checkEatsFood(newHead,food,2)){
+                setFood(randomFoodPosition(GAME_BOUNDS.xMax,GAME_BOUNDS.yMax))
+
                 setSnake([newHead,...snake])
                 //get another position for the food and set the score
                 setScore(score+SCORE_INCREMENT);
-                setFood(randomFoodPosition(GAME_BOUNDS.xMax,GAME_BOUNDS.yMax))
+              
+            }
+            else{
+                setSnake([newHead,...snake.slice(0,-1)])
             }
 
 
         //we need to remove the last position of the head so that snake does not continually grow without eating so we will use the slice function
         //slice is used like this slice(start,end) start=where to begin end=where to stop, but not include
-            setSnake([newHead,...snake.slice(0,-1)])
+            
 
     }
    const handleGesture = (event: GestureEventType) => {
@@ -108,9 +114,27 @@ export default function Game():React.JSX.Element{
 const pan = Gesture.Pan().onEnd((event) => {
   handleGesture(event);
 });
+const reloadGame= () =>{
+    setSnake(SNAKE_INTIAL_POSITION);
+    setFood(FOOD_INITIAL_POSITION)
+    setIsGameOver(false);
+    setScore(0);
+    SetDirection(Direction.Right);
+    setIsPaused(false);
+};
+const pauseGame= () =>{
+    setIsPaused(!isPaused);
+};
     return(
        <GestureDetector gesture={pan}>
         <SafeAreaView style={styles.container} >
+            <Header isPaused={isPaused} pauseGame={pauseGame} reloadGame={reloadGame}>
+                <Text style={{
+                    fontSize:22,
+                    fontWeight:"bold",
+                    color:Colors.primary,
+                }}>{score}</Text>
+            </Header>
             <View style={styles.boundaries}> <Snake snake={snake}/>
             <Food x={food.x} y={food.y}/>
             </View>
@@ -123,6 +147,7 @@ const styles= StyleSheet.create({
     container:{
         flex:1,
         backgroundColor:Colors.primary,
+        paddingTop:15,
         
     },
     boundaries:{
